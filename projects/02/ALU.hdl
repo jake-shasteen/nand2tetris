@@ -42,19 +42,23 @@ CHIP ALU {
         ng; // 1 if (out < 0),  0 otherwise
 
     PARTS:
-        Mux16(b[0..15]=false, a=x, sel=zx, out=actualX);
-        Not16(in=actualX, out=notX);
-        Mux16(b=notX, a=actualX, sel=nx, out=reallyReallyX);
+        Mux16(b[0..15]=false, a=x, sel=zx, out=transformedX);
+        Not16(in=transformedX, out=notX);
+        Mux16(b=notX, a=transformedX, sel=nx, out=finalX);
 
-        Mux16(b[0..15]=false, a=y, sel=zy, out=actualY);
-        Not16(in=actualY, out=notY);
-        Mux16(b=notY, a=actualY, sel=ny, out=reallyReallyY);
+        Mux16(b[0..15]=false, a=y, sel=zy, out=transformedY);
+        Not16(in=transformedY, out=notY);
+        Mux16(b=notY, a=transformedY, sel=ny, out=finalY);
 
-        Add16(a=reallyReallyX, b=reallyReallyY, out=added);
-        And16(a=reallyReallyX, b=reallyReallyY, out=anded);
+        Add16(a=finalX, b=finalY, out=added);
+        And16(a=finalX, b=finalY, out=anded);
         Mux16(b=added, a=anded, sel=f, out=addedOrAnded);
 
         Not16(in=addedOrAnded, out=negatedOutput);
-        Mux16(b=negatedOutput, a=addedOrAnded, sel=no, out=out);
+        Mux16(b=negatedOutput, a=addedOrAnded, sel=no, out=out, out[15]=ng, out[0..7]=zrFirstHalf, out[8..15]=zrSecondHalf);
 
+        Or8Way(in=zrFirstHalf, out=zr1);
+        Or8Way(in=zrSecondHalf, out=zr2);
+        Or(a=zr1, b=zr2, out=notZr);
+        Not(in=notZr, out=zr);
 }
